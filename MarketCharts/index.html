@@ -1,0 +1,291 @@
+<!doctype html>
+
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Rune.farm tools (community)</title>
+  <meta name="description" content="Rune.farm tools (community)">
+  <meta name="author" content="Andrej Boleslavský">
+
+  <meta property="og:title" content="Rune.farm tools (community)">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://id144.org/runetoools/marketchart/">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="">
+
+  <script src="https://cdn.ethers.io/lib/ethers-5.1.umd.min.js" type="text/javascript"></script>	
+  <script language="JavaScript" type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.min.js"></script>  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    
+    @font-face {
+                font-family: "Exocet D";
+                src: url(https://rune.game/fonts/ExocetD.woff) format("woff");
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+
+                
+            }
+
+            * {
+                font-family: "Exocet D",sans-serif;
+                text-transform: uppercase
+                
+            }            
+            body {
+              background: rgb(0, 0, 0);
+              color: rgb(187, 149, 94);              
+              line-height: 1.6;              
+            }
+            a {
+              background: rgb(0, 0, 0);
+              color: rgb(187, 149, 94);              
+            }            
+            .result {
+              background: rgb(0, 0, 0);
+              color: rgb(187, 149, 94);              
+            }            
+            .title
+            {
+              margin: 0 auto; /* or margin: 0 auto 0 auto */
+              font-size: 24px;
+              font-weight: 600;
+              text-align: center;
+              vertical-align: middle;
+            }
+            .button{
+              background-color: #6e0000;
+              align-items: center;
+            }
+          .div-table {
+            display: table;         
+            width: auto;         
+            margin: 0 auto; /* or margin: 0 auto 0 auto */
+           border-spacing: 5px; /* cellspacing:poor IE support for  this */
+          }
+          .div-table-row {
+            display: table-row;
+            width: auto;
+            clear: both;
+          }
+          .div-table-col {
+            float: left; /* fix for  buggy browsers */
+            display: table-column;         
+            width: 400px;         
+            
+          }
+  </style>
+
+</head>
+
+
+<body>
+  
+  <div style="margin:5%">
+    <canvas id="runeChart"></canvas>
+    <div id="tradeList" style="margin:0,5%,0,5%">
+    </div>
+  
+  </div>
+  <script>
+  </script>
+  <script>
+
+  </script>
+  <script>
+    function initDropDown()
+    {
+
+    }
+
+    function RuneTrade(price,status, updatedAt,tokenId) {
+      //this.id = id;    
+      //this.seller = seller;
+      //this.buyer = buyer;
+      this.tokenId = tokenId;
+      this.price = price;
+      this.status = status;
+     // this.hotness = hotness;
+      //this.createdAt = createdAt;
+      this.updatedAt = updatedAt;
+      //this.lastBlock = lastBlock;
+      //this.blockNumber = blockNumber;
+    } 
+    function tradeDay(date, count, total, tokens) {
+      this.date = date;
+      this.count = count;
+      this.total = total;
+      this.tokens = [];
+    }
+    function chartData() {
+      this.labels = [];
+      this.volume = [];
+      this.count = [];      
+      this.tokens = [];      
+    }
+  
+    var getDaysArray = function(start, end) {
+      for(var arr=[],dt=new Date(start); dt<=end; dt.setDate(dt.getDate()+1)){
+          arr.push(new Date(dt));
+      }
+      return arr;
+    };  
+    var tradeDays = [];
+    var runeTrades = [];
+
+    function loadJSON(callback) {   
+        var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+        xobj.open('GET', 'https://cache.rune.game/trades.json?' + Math.random(), true);
+        xobj.onreadystatechange = function () {
+        if (xobj.readyState == 4 && xobj.status == "200") {
+          callback(JSON.parse(xobj.responseText));
+        }
+      };
+      xobj.send(null);  
+    }
+    loadJSON(function(json) {
+
+      json.forEach(element => {
+
+        var trade = new RuneTrade();
+        if (element.status =='sold') {
+          trade.buyer = element.buyer;
+          trade.price = element.price;        
+          trade.tokenId = element.tokenId;        
+          trade.updatedAt = new Date(element.updatedAt);        
+          runeTrades.push(trade);
+        }
+      });
+      runeTrades.forEach(element =>{
+;  
+      });
+      //get min max date
+      _minTimestamp = 9623829064720
+      _maxTimestamp = 0
+      json.forEach(element => {
+        _minTimestamp = Math.min(_minTimestamp,element.updatedAt)
+        _maxTimestamp = Math.max(_maxTimestamp,element.updatedAt)
+      }) 
+      allTradeDays = getDaysArray(_minTimestamp * 1, _maxTimestamp * 1);
+
+
+      allTradeDays.forEach(day => {
+        var _tradeDay = new tradeDay();
+        _tradeDay.date = day;
+        _tradeDay.total = 0;
+        _tradeDay.count = 0;
+        runeTrades.forEach(trade => {
+          if ((trade.updatedAt.getYear() == day.getYear())&& (trade.updatedAt.getMonth() == day.getMonth()) && (trade.updatedAt.getDate() == day.getDate()))  {
+            _tradeDay.count++;
+            _tradeDay.total += trade.price;
+            _tradeDay.tokens.push(trade.tokenId);
+          };
+
+        });
+        tradeDays.push(_tradeDay);
+        
+      });
+      runeMarketChartData = new chartData();
+      runeMarketChartData.labels = [];
+      
+      tradeDays.forEach(day => {
+        
+        runeMarketChartData.labels.push(day.date.toISOString().slice(0,10))
+        runeMarketChartData.volume.push(day.total)
+        runeMarketChartData.count.push(day.count)
+        runeMarketChartData.tokens.push(day.tokens)
+      });
+
+  
+      const data = {
+      labels: runeMarketChartData.labels,
+      datasets: [
+        {
+        label: 'Rune.game market sales count',
+        fill: false,
+        backgroundColor: 'rgb(187, 149, 94)',
+        borderColor: 'rgb(187, 149, 94)',
+        data: runeMarketChartData.count,
+     
+        },
+       {
+        label: 'Rune.game market sales volume',
+        fill: true,
+        backgroundColor: 'rgb(110, 0, 0)',
+        borderColor: 'rgb(110, 0, 0)',
+        data: runeMarketChartData.volume,
+     
+        },     
+    ]
+    };
+  
+    const config = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            color: 'white',
+            text: 'Rune.game NFT market'
+          }
+        },
+        onClick: (e) => {clickHandler(e)}
+      },
+    };
+    const runeMarketChart = new Chart(
+      document.getElementById('runeChart'),
+      config
+    );
+
+    runeMarketChart.update();
+
+    });
+
+    function clickHandler(evt) {
+    const points = evt.chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+    _tradedTokensList = "";
+    if (points.length) {
+        const firstPoint = points[0];
+        var label = evt.chart.data.labels[firstPoint.index];
+        var value = evt.chart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+        //allTradeDays
+        _tradedTokens = runeMarketChartData.tokens[firstPoint.index];
+        _tradedTokens.forEach(element =>{
+          _tradedTokensList +=  "<a href='https://rune.game/token/" + element+ "'>" + element +  "</a><br/>";
+        });
+    }
+    document.getElementById("tradeList").innerHTML=_tradedTokensList; 
+}
+
+    var provider
+
+    async function connect() {
+        if (!window.ethereum) {
+            alert('No wallet installed. Please install a wallet on the browser - MetaMask is preferred!')
+            return
+        }
+
+        provider = await new ethers.providers.Web3Provider(window.ethereum, "any")
+        await provider.send("eth_requestAccounts", [])
+        var signer = provider.getSigner()
+        var address = await signer.getAddress()
+        bt.innerHTML = address
+        var jsonStr = Get('./miniABI.json')
+        var miniABI = JSON.parse();          
+        console.log(data);  
+        
+    }
+    
+  </script>  
+</body>
+</html>
